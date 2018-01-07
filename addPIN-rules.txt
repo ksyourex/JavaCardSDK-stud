@@ -1,0 +1,55 @@
+hack.lu 2010
+Smart cards workshop
+Dr Vincent GUYOT
+
+
+The AddPIN exemple or how to add security by PIN code to a smart card application with read/write functions.
+
+
+Rules:
+- remove the comments within the files TheClient.java and TheApplet.java
+- copy and paste the commands at the right place within TheApplet.java
+
+
+1- Define a global attribute to handle a PIN code:
+
+	OwnerPIN pin;
+
+
+2- Initialize pin within the constructor:
+
+	byte[] pincode = {(byte)0x30,(byte)0x30,(byte)0x30,(byte)0x30}; // PIN code "0000"
+	pin = new OwnerPIN((byte)3,(byte)8);  				// 3 tries 8=Max Size
+	pin.update(pincode,(short)0,(byte)4); 				// from pincode, offset 0, length 4
+
+
+3- Within the select() method, check if the card is not already blocked:
+
+	if ( pin.getTriesRemaining() == 0 )
+		return false;
+
+
+4- Within the deselect() method, reset the PIN code:
+
+	pin.reset();   
+
+
+5- add a case PINVERIFY within the switch structure, calling the verify() method (in comment)
+
+	case PIN_VERIFY:
+		verify( apdu );
+		break;
+
+
+6- Forbide the access to the command READ before PIN code validation:
+
+	if ( ! pin.isValidated() )
+		ISOException.throwIt(SW_PIN_VERIFICATION_REQUIRED);
+
+
+7- Forbide the access to the command WRITE before PIN code validation:
+
+	if ( ! pin.isValidated() )
+		ISOException.throwIt(SW_PIN_VERIFICATION_REQUIRED);
+
+8- compile and run.
